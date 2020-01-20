@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<script src="https://d3js.org/d3.v5.min.js"></script>
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700,800" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="styles.css">
+	<meta name="viewport" content="width=device-width">
+</head>
+<body>
+
+<header>
+	<div class="logo"><img src="../assets/ui-logo.png"></div>
+	<div class="avatar">RP</div>
+</header>
+
+<section id="landing">
+	<h1>Flourishing Index</h1>
+	<p>See how your flourishing score has evolved</o>
+	<div class="controls">
+		<selection id="quarter">Quarter</selection>
+		<selection id="year">Year</selection>
+	</div>
+</section>
+
+<div class="results">
+	<div id="total-score"></div>
+	<div class="holder">
+		<svg width=600 height=500></svg>
+	</div>
+</div>
+
+<div class="slidecontainer">
+  <input type="range" min="1" max="4" value="4" class="slider" id="slider1">
+</div>
+	<div class="labels">
+		<label>Q1 2018</label>
+		<label>Q2 2018</label>
+		<label>Q3 2018</label>
+		<label>Q4 2018</label>
+	</div>
+
+<h1 class="subsection-header">Domains</h1>
+<section class="scroll-section" id="domains">
+
+	<div class="card" id="card1">
+		<div class="info">
+			<h2>Happiness and Life Satisfaction</h2>
+			<p>This is a short description of this domain's results</p>
+		</div>
+	</div>
+
+	<div class="card" id="card2">
+		<div class="info">
+			<h2>Mental and Physical Health</h2>
+			<p>This is a short description of this domain's results</p>
+		</div>
+	</div>
+
+	<div class="card" id="card3">
+		<div class="info">
+			<h2>Meaning and Purpose</h2>
+			<p>This is a short description of this domain's results</p>
+		</div>
+	</div>
+
+	<div class="card" id="card4">
+		<div class="info">
+			<h2>Character & Virtue</h2>
+			<p>This is a short description of this domain's results</p>
+		</div>
+	</div>
+
+	<div class="card" id="card5">
+		<div class="info">
+			<h2>Close Social Relationships</h2>
+			<p>This is a short description of this domain's results</p>
+		</div>
+	</div>
+
+	<div class="card" id="card6">
+		<div class="info">
+			<h2>Financial and Material Stability</h2>
+			<p>This is a short description of this domain's results</p>
+		</div>
+	</div>
+
+</section>
+
+
+<h1 class="subsection-header">Actions</h1>
+<section class="scroll-section" id="actions">
+	<div class="card" id="card7">
+		<div class="action">
+			<h3>Intro to Mindfulness</h3>
+			<button>Enroll</button>
+		</div>
+	</div>
+
+	<div class="card" id="card8">
+		<div class="action">
+			<h3>Presence Inventory</h3>
+			<button>Make a Habit</button>
+		</div>
+	</div>
+
+	<div class="card" id="card9">
+		<div class="action">
+			<h3>Get In The Flow</h3>
+			<button>Practice</button>
+		</div>
+	</div>
+
+	<div class="card" id="card10">
+		<div class="action">
+			<h3>Coach Molly</h3>
+			<button>Follow</button>
+		</div>
+	</div>
+
+</section>
+</body>
+<script>
+var svg;
+var slider1_value;
+var view1 = document.querySelector('#quarter')
+var view2 = document.querySelector('#year')
+var view ="quarter";
+var label = document.querySelector('.labels');
+var labels = document.querySelectorAll('label');
+console.log(labels);
+
+for(i=0;i<labels.length;i++){
+	labels[i].onclick=function() {
+		console.log(i);
+		val = i+1;
+		console.log(val);
+		slider1_value=val;
+	}
+}
+
+d3.csv('data/quarterly_data.csv')
+  .then(function(data) {
+  	data_2018=data.filter(function(d){return d.year==2018});
+  	data_2017=data.filter(function(d){return d.year==2017});
+  	console.log(data_2018);
+  	slider1_value = slider1.value;
+  	loadData(data_2018,slider1_value);
+	slider1 = document.querySelector('#slider1');
+	slider1.onchange=function() {
+		slider1_value = slider1.value;
+		if(view=="quarter"){
+			update(data_2018,slider1_value);
+		} else if (view=="year"){
+			update(data_2017,slider1_value);
+		}
+	}
+	window.onresize=function() {
+		if (!(/Android|webOS|iPhone|iPad|iPod|BlackBerry|BB|PlayBook|IEMobile|Windows Phone|Kindle|Silk|Opera Mini/i.test(navigator.userAgent))) {
+			location.reload();
+		} else {
+			// do nothing
+		}
+	}
+	view2.onclick=function() {
+		view ="year";
+		label.innerHTML="<label>2015</label><label>2016</label><label>2017</label><label>2018</label>"
+		view1.style.backgroundColor="white";
+		view1.style.color="#565658";
+		view2.style.backgroundColor="#565658";
+		view2.style.color="white";
+		update(data_2017,slider1_value);
+	}
+	view1.onclick=function() {
+		view = "quarter";
+		label.innerHTML="<label>Q1 2018</label><label>Q2 2018</label><label>Q3 2018</label><label>Q4 2018</label>"
+		view1.style.backgroundColor="#565658";
+		view1.style.color="white";
+		view2.style.backgroundColor="white";
+		view2.style.color="#565658";
+		update(data_2018,slider1_value);
+	}
+  })
+  .catch(function(error){
+     console.log(error);
+  })
+
+
+
+function loadData(data,slider_val){
+	data = data.filter(function(d){return d.quarter ==slider_val;})
+	console.log(data);
+	var svg = d3.select("svg")
+	var holder = d3.select('.holder')
+		width = holder.node().getBoundingClientRect().width;
+		height = holder.node().getBoundingClientRect().height;
+
+	circles = [];
+	cx = width/2;
+	cy = height/2;
+	pi=Math.PI;
+	x_pos=[1,1,1,1,-1,-1];
+	y_pos=[-1,-1,-1,1,1,1];
+
+	for(i=1;i<7;i++){
+		score = data[0][i];
+		radius = Math.sqrt(score/pi)
+		dd =radius;
+		circles.push({
+			domain: i,
+			id: "domain"+i,
+			score:score,
+			radius: radius,
+			cx: cx,
+			cy: cy+(y_pos[i-1]*dd),
+		})
+		console.log(cy)
+		console.log(i+":"+(cy+(y_pos[i-1]*dd)))
+	}
+	console.log(circles);
+
+	svg = d3.select("svg");
+
+	div = d3.select('body')
+		.append("div")
+		.attr("class","tooltip");
+
+	var elem = svg.selectAll("g")
+		.data(circles)
+
+	var elemEnter = elem.enter()
+        .append("g")
+        .attr("class", "node")
+
+     d3.selection.prototype.moveToFront = function() { 
+	  return this.each(function() { 
+	    this.parentNode.appendChild(this); 
+	  }); 
+	}; 
+
+	var circle= elemEnter.append("circle")
+		.attr("class", "circle")
+		.attr("id", function(d){return d.id})
+		.attr("value", function(d){return d.score})
+		.attr("cx", function(d) { return d.cx; })
+		.attr("cy", function(d) { return d.cy; })
+		.attr("r", function(d){return d.radius})
+		.on("mouseover",function() {
+			var sel = d3.select(this);
+  			sel.moveToFront();
+			div = d3.select('.tooltip');
+			if(this.id=="domain1"){
+				domain ="Happiness and Life Satisfaction"
+			}if(this.id=="domain2"){
+				domain ="Mental and Physical Health"
+			}if(this.id=="domain3"){
+				domain ="Meaning and Purpose"
+			}if(this.id=="domain4"){
+				domain ="Character and Virtue"
+			}if(this.id=="domain5"){
+				domain ="Close and Social Relationships"
+			}if(this.id=="domain6"){
+				domain ="Financial and Material Stability"
+			}
+			domain_score= this.getAttribute("value");
+			div.transition()
+				.duration(100)
+				.style("opacity", "1")
+				.style("left",(d3.event.pageX)+"px")
+				.style("top", (d3.event.pageY - 28) + "px");
+			div.html(domain +": "+ domain_score);  
+    	})
+    	.on("mouseout", function() {
+    		div.transition()
+    			.duration(100)
+    			.style("opacity","0")
+    	});
+
+	total = data[0]['total'];
+    displayTotal(total);
+
+}
+
+function update(data, slider_val) {
+
+	data = data.filter(function(d){return d.quarter ==slider_val;})
+	console.log(data);
+	var svg = d3.select("svg")
+	var holder = d3.select('.holder')
+		width = holder.node().getBoundingClientRect().width;
+		height = holder.node().getBoundingClientRect().height;
+
+	circles2 = [];
+	cx = width/2;
+	cy = height/2;
+	pi=Math.PI;
+	x_pos=[1, 1, 1,1,-1,-1];
+	y_pos=[-1, -1, -1,1,1,1];
+
+	for(i=1;i<7;i++){
+		score = data[0][i];
+		radius = Math.sqrt(score/pi)
+		dd =radius;
+		circles2.push({
+			domain: i,
+			id: "domain"+i,
+			score:score,
+			radius: radius,
+			cx: cx,
+			cy: cy+(y_pos[i-1]*dd),
+		})
+		console.log(cy)
+		console.log(i+":"+(cy+(y_pos[i-1]*dd)))
+	}
+	console.log(circles2);
+
+	svg = d3.select("svg");
+
+	var elem = svg.selectAll("g")
+		.data(circles2)
+
+	var elemEnter = elem.enter()
+        .append("g")
+        .attr("class", "node")
+
+   svg.selectAll('.node circle')
+    .data(circles2)
+    .transition().duration(500)
+    .attr("value", function(d){return d.score})
+    .attr("cx", function(d) { return d.cx; })
+	.attr("cy", function(d) { return d.cy; })
+    .attr('r', function(d){ return d.radius;});
+
+    total = data[0]['total'];
+    displayTotal(total);
+
+}
+
+function displayTotal(total_score) {
+	target = document.querySelector('#total-score');
+	if(view =="quarter"){
+		target.innerHTML="<h1>"+ total_score +"</h1><h3>Total Flourishing</h3>"
+	} else if (view =="year"){
+		target.innerHTML="<h1>"+ total_score +"</h1><h3>Avg. Flourishing</h3>"
+	}
+	
+}
+
+
+
+</script>
+</html>
